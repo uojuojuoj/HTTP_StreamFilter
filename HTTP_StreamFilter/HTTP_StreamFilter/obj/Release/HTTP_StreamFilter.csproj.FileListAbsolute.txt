@@ -1,0 +1,8 @@
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\bin\Release\HTTP_StreamFilter.exe.config
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\bin\Release\HTTP_StreamFilter.exe
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\bin\Release\HTTP_StreamFilter.pdb
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\bin\Release\Newtonsoft.Json.dll
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\bin\Release\Newtonsoft.Json.xml
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\obj\Release\HTTP_StreamFilter.csproj.CopyComplete
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\obj\Release\HTTP_StreamFilter.exe
+C:\Users\Vaidas\Desktop\DEV\HTTP_StreamFilter\HTTP_StreamFilter\HTTP_StreamFilter\obj\Release\HTTP_StreamFilter.pdb
