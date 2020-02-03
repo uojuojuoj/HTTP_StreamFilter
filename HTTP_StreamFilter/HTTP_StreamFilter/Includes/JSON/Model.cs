@@ -4,9 +4,9 @@ namespace HTTP_StreamFilter.JSON
 {
     public class Model
     {
-        public string Ip { get; set; }
-        public DateTime DateTime { get; set; }
-        public int StatusCode { get; set; }
+        public DateTime time { get; set; }
+        public string ip { get; set; }
+        public int status_code { get; set; }
 
     }
 }

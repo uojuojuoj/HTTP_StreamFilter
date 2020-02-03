@@ -1,69 +1,63 @@
 ﻿using HTTP_StreamFilter.JSON;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace HTTP_StreamFilter.StreamFilter
 {
     class Filter
     {
-        private DateTime? dateTimeFrom, dateTimeTo;
-        private int[] range = { 0, 0 };
-        private bool unique;
-
-        private FilterArgs args = new FilterArgs
+        public ConcurrentQueue<Model> filtered = new ConcurrentQueue<Model>();
+        public ConcurrentDictionary<int, int> counters = new ConcurrentDictionary<int, int>();
+        public void RunFromFile(string fileFullPath)
         {
-            DateTo = @"-dto\s(?<datetime>.{19})",
-            DateFrom = @"-dfrom\s(?<datetime>.{19})",
-            ResponseIdRange = @"-rid\s\[(?<from>\d{1,3})-(?<to>\d{1,3})\]",
-            IpUnique = @"-ipu\s(?<flag>(true|false))"
-        };
-
-        public List<Model> filtered = new List<Model>();
-
-        public void FilterOut(string arguments, Model target)
-        {
-            ParseArguments(arguments);
-
-            if (dateTimeFrom == null)
+            using (StreamReader sr = new StreamReader(File.Open(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
             {
-                Console.WriteLine("Must have atleast date from!");
-                return;
+                string target;
+                while (true)
+                {
+                    if ((target = sr.ReadLine()) == null)
+                    {
+                        Thread.Sleep(10);
+                        continue;
+                    }
+                    FilterOutUniqueIp(target);
+                }
             }
-            if (!(dateTimeTo != null && target.DateTime >= dateTimeFrom && target.DateTime <= dateTimeTo))
-                return;
-            if (!(target.StatusCode >= range[0] && target.StatusCode <= range[1]))
-                return;
-            if (unique && filtered.Where(w => w.Ip == target.Ip && w.DateTime.ToString("yyyy-MM-dd") == target.DateTime.ToString("yyyy-MM-dd")).Any())
-                return;
-
-            filtered.Add(target);
-            Console.WriteLine($"Filtered record: {target.DateTime} : {target.Ip} : {target.StatusCode}");
         }
 
-        private void ParseArguments(string arguments)
+        private void FilterOutUniqueIp(string targetStr)
         {
-            Match mDateTo = Regex.Match(arguments, args.DateTo);
-            Match mDateFrom = Regex.Match(arguments, args.DateFrom);
-            Match mResponseIdRange = Regex.Match(arguments, args.ResponseIdRange);
-            Match mIpUnique = Regex.Match(arguments, args.IpUnique);
+            Model target = new Serializer().SerializeToObj(targetStr);
 
-            if (mDateFrom.Success)
-                dateTimeFrom = DateTime.ParseExact(mDateFrom.Groups["datetime"].Value, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            // only status_code in range [500-599]
+            if (!(target.status_code >= 500 && target.status_code <= 599))
+                return;
+            // only unique ips for same day
+            if (filtered.Where(w => w.ip == target.ip && w.time.ToString("yyyyMMdd") == target.time.ToString("yyyyMMdd")).Any())
+                return;
+            // filter out weekends
+            if (target.time.DayOfWeek == DayOfWeek.Saturday || target.time.DayOfWeek == DayOfWeek.Sunday)
+                return;
 
-            if (mDateTo.Success)
-                dateTimeTo = DateTime.ParseExact(mDateTo.Groups["datetime"].Value, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            filtered.Enqueue(target);
+            CountByHour(target);
+        }
 
-            if (mResponseIdRange.Success)
-            {
-                range[0] = Int32.Parse(mResponseIdRange.Groups["from"].Value);
-                range[1] = Int32.Parse(mResponseIdRange.Groups["to"].Value);
-            }
+        private void CountByHour(Model target)
+        {
+            if (counters.Count != 0)
+                foreach (KeyValuePair<int, int> kvp in counters)
+                    if (kvp.Key == target.time.Hour)
+                    {
+                        counters[kvp.Key] += 1;
+                        return;
+                    }
 
-            if (mIpUnique.Success && mIpUnique.Groups["flag"].Value.ToLower() == "true")
-                unique = true;
+            counters.AddOrUpdate(target.time.Hour, 1, (k, v) => v += 1);
         }
     }
 }
